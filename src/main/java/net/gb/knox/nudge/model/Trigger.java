@@ -1,19 +1,19 @@
 package net.gb.knox.nudge.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import net.gb.knox.nudge.constraint.IntervalSpan;
+import lombok.NonNull;
+import net.gb.knox.nudge.constraint.PeriodSpan;
 import net.gb.knox.nudge.domain.Communication;
-import net.gb.knox.nudge.domain.Interval;
+import net.gb.knox.nudge.domain.Period;
 
 @Data
 @NoArgsConstructor
-@IntervalSpan
+@AllArgsConstructor
+@PeriodSpan
 @Entity
 public class Trigger {
 
@@ -22,15 +22,21 @@ public class Trigger {
     private Long id;
 
     @NotNull
-    private Interval interval;
+    private Period period;
 
     @NotNull
     private Integer span;
 
     private Communication communication = Communication.NEUTRAL;
 
-    public Trigger(Interval interval, Integer span) {
-        this.interval = interval;
+    public Trigger(Period period, Integer span) {
+        this.period = period;
         this.span = span;
+    }
+
+    public Trigger(Period period, Integer span, @NonNull Communication communication) {
+        this.period = period;
+        this.span = span;
+        this.communication = communication;
     }
 }

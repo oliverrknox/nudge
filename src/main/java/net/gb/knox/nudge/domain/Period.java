@@ -1,6 +1,6 @@
 package net.gb.knox.nudge.domain;
 
-public enum Interval {
+public enum Period {
     MONTH,
     WEEK,
     DAY

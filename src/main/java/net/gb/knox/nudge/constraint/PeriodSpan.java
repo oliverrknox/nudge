@@ -8,12 +8,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Constraint(validatedBy = IntervalSpanValidator.class)
+@Constraint(validatedBy = PeriodSpanValidator.class)
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface IntervalSpan {
+public @interface PeriodSpan {
 
-    String message() default "Span must be within boundaries for interval";
+    String message() default "Span must be within boundaries for period";
 
     Class<?>[] groups() default {};
 
