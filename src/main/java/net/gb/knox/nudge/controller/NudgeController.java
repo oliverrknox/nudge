@@ -7,8 +7,7 @@ import net.gb.knox.nudge.service.NudgeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -27,40 +26,39 @@ public class NudgeController {
     }
 
     @GetMapping
-    public ResponseEntity<GetNudges> getAllNudgesForUser(@AuthenticationPrincipal User user,
+    public ResponseEntity<GetNudges> getAllNudgesForUser(Authentication authentication,
                                                         @RequestParam Optional<String> field,
                                                         @RequestParam Optional<Sort.Direction> direction) {
         GetNudges getNudges;
-
         if (field.isEmpty() || direction.isEmpty()) {
-            getNudges = nudgeService.getAllNudgesForUser(user.getUsername());
+            getNudges = nudgeService.getAllNudgesForUser(authentication.getName());
         } else {
-            getNudges = nudgeService.getAllNudgesForUser(user.getUsername(), Sort.by(direction.get(), field.get()));
+            getNudges = nudgeService.getAllNudgesForUser(authentication.getName(), Sort.by(direction.get(), field.get()));
         }
 
         return ResponseEntity.ok(getNudges);
     }
 
     @PostMapping
-    public ResponseEntity<Void> createNudgeForUser(@AuthenticationPrincipal User user,
+    public ResponseEntity<Void> createNudgeForUser(Authentication authentication,
                                                    @RequestBody UpsertNudge createNudge) throws URISyntaxException {
-        var nudgeId = nudgeService.createNudgeForUser(user.getUsername(), createNudge);
+        var nudgeId = nudgeService.createNudgeForUser(authentication.getName(), createNudge);
         var location = new URI("/nudges/" + nudgeId);
 
         return ResponseEntity.created(location).build();
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> updateNudgeForUser(@AuthenticationPrincipal User user, @PathVariable Long id,
+    public ResponseEntity<Void> updateNudgeForUser(Authentication authentication, @PathVariable Long id,
                                                    @RequestBody UpsertNudge updateNudge) throws EntityMissingException {
-        nudgeService.updateNudgeForUser(id, user.getUsername(), updateNudge);
+        nudgeService.updateNudgeForUser(id, authentication.getName(), updateNudge);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteNudgeForUser(@AuthenticationPrincipal User user, @PathVariable Long id)
-            throws EntityMissingException {
-        nudgeService.deleteNudgeForUser(id, user.getUsername());
+    public ResponseEntity<Void> deleteNudgeForUser(Authentication authentication,
+                                                    @PathVariable Long id) throws EntityMissingException {
+        nudgeService.deleteNudgeForUser(id, authentication.getName());
         return ResponseEntity.noContent().build();
     }
 }

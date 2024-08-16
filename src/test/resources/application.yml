@@ -1,5 +1,12 @@
 spring:
   datasource:
     url: jdbc:h2:mem:nudge
+
   jpa:
     defer-datasource-initialization: true
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri:
