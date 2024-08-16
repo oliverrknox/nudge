@@ -35,10 +35,12 @@ public class NudgeServiceUnitTests {
         when(repository.findAllByUserId(NudgeFixture.USER_ID, sort)).thenReturn(NudgeFixture.NUDGES);
 
         var getNudges = service.getAllNudgesForUser(NudgeFixture.USER_ID);
-        assertThat(getNudges).isInstanceOf(List.class).hasOnlyElementsOfType(GetNudge.class);
+        assertThat(getNudges).isInstanceOf(GetNudges.class);
+        assertThat(getNudges.nudges()).isNotEmpty();
 
         getNudges = service.getAllNudgesForUser(NudgeFixture.USER_ID, sort);
-        assertThat(getNudges).isInstanceOf(List.class).hasOnlyElementsOfType(GetNudge.class);
+        assertThat(getNudges).isInstanceOf(GetNudges.class);
+        assertThat(getNudges.nudges()).isNotEmpty();
     }
 
     @Test
@@ -58,7 +60,7 @@ public class NudgeServiceUnitTests {
         var createTrigger = new CreateTrigger(Period.DAY, 1, Optional.of(Communication.ASSERTIVE));
         var upsertNudge = new UpsertNudge("Title", "Description",
                 LocalDate.of(2025, 1, 1), List.of(createTrigger));
-        when(repository.existsByIdAndUserId(id, NudgeFixture.USER_ID)).thenReturn(false);
+        when(repository.existsByIdAndUserId(id, NudgeFixture.USER_ID)).thenReturn(true);
 
         service.updateNudgeForUser(id, NudgeFixture.USER_ID, upsertNudge);
 
@@ -71,7 +73,7 @@ public class NudgeServiceUnitTests {
         var createTrigger = new CreateTrigger(Period.DAY, 1, Optional.of(Communication.ASSERTIVE));
         var upsertNudge = new UpsertNudge("Title", "Description",
                 LocalDate.of(2025, 1, 1), List.of(createTrigger));
-        when(repository.existsByIdAndUserId(id, NudgeFixture.USER_ID)).thenReturn(true);
+        when(repository.existsByIdAndUserId(id, NudgeFixture.USER_ID)).thenReturn(false);
 
         assertThatThrownBy(() -> service.updateNudgeForUser(id, NudgeFixture.USER_ID, upsertNudge))
                 .isInstanceOf(EntityMissingException.class);
@@ -80,7 +82,7 @@ public class NudgeServiceUnitTests {
     @Test
     public void testDeleteNudgeForUser() throws EntityMissingException {
         var id = 1L;
-        when(repository.existsByIdAndUserId(id, NudgeFixture.USER_ID)).thenReturn(false);
+        when(repository.existsByIdAndUserId(id, NudgeFixture.USER_ID)).thenReturn(true);
 
         service.deleteNudgeForUser(id, NudgeFixture.USER_ID);
 
@@ -90,7 +92,7 @@ public class NudgeServiceUnitTests {
     @Test
     public void testDeleteNudgeForUserThrows() {
         var id = 1L;
-        when(repository.existsByIdAndUserId(id, NudgeFixture.USER_ID)).thenReturn(true);
+        when(repository.existsByIdAndUserId(id, NudgeFixture.USER_ID)).thenReturn(false);
 
         assertThatThrownBy(() -> service.deleteNudgeForUser(id, NudgeFixture.USER_ID)).isInstanceOf(EntityMissingException.class);
     }

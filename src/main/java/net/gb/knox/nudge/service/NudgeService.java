@@ -2,7 +2,7 @@ package net.gb.knox.nudge.service;
 
 import net.gb.knox.nudge.converter.NudgeConverter;
 import net.gb.knox.nudge.converter.TriggerConverter;
-import net.gb.knox.nudge.domain.GetNudge;
+import net.gb.knox.nudge.domain.GetNudges;
 import net.gb.knox.nudge.domain.UpsertNudge;
 import net.gb.knox.nudge.exception.EntityMissingException;
 import net.gb.knox.nudge.model.Nudge;
@@ -10,8 +10,7 @@ import net.gb.knox.nudge.repository.NudgeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class NudgeService {
@@ -23,22 +22,25 @@ public class NudgeService {
         this.nudgeRepository = nudgeRepository;
     }
 
-    public List<GetNudge> getAllNudgesForUser(String userId) {
-        return nudgeRepository.findAllByUserId(userId).stream().map(NudgeConverter::convert).toList();
+    public GetNudges getAllNudgesForUser(String userId) {
+        return new GetNudges(nudgeRepository.findAllByUserId(userId).stream().map(NudgeConverter::convert).toList());
     }
 
-    public List<GetNudge> getAllNudgesForUser(String userId, Sort sort) {
-        return nudgeRepository.findAllByUserId(userId, sort).stream().map(NudgeConverter::convert).toList();
+    public GetNudges getAllNudgesForUser(String userId, Sort sort) {
+        return new GetNudges(nudgeRepository.findAllByUserId(userId, sort).stream().map(NudgeConverter::convert).toList());
     }
 
-    public void createNudgeForUser(String userId, UpsertNudge upsertNudge) {
+    public Long createNudgeForUser(String userId, UpsertNudge upsertNudge) {
         var newNudge = new Nudge(userId, upsertNudge.title(), upsertNudge.description(), upsertNudge.due(),
                 upsertNudge.triggers().stream().map(TriggerConverter::convert).toList());
+
         nudgeRepository.save(newNudge);
+
+        return newNudge.getId();
     }
 
     public void updateNudgeForUser(Long id, String userId, UpsertNudge upsertNudge) throws EntityMissingException {
-        if (nudgeRepository.existsByIdAndUserId(id, userId)) {
+        if (!nudgeRepository.existsByIdAndUserId(id, userId)) {
             throw new EntityMissingException(String.format("Nudge not found with id = %s and userId = %s", id, userId));
         }
 
@@ -47,8 +49,9 @@ public class NudgeService {
         nudgeRepository.save(updatedNudge);
     }
 
+    @Transactional
     public void deleteNudgeForUser(Long id, String userId) throws EntityMissingException {
-        if (nudgeRepository.existsByIdAndUserId(id, userId)) {
+        if (!nudgeRepository.existsByIdAndUserId(id, userId)) {
             throw new EntityMissingException(String.format("Nudge not found with id = %s and userId = %s", id, userId));
         }
         nudgeRepository.deleteByIdAndUserId(id, userId);
