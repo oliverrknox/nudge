@@ -2,6 +2,7 @@ package net.gb.knox.nudge.service;
 
 import net.gb.knox.nudge.domain.*;
 import net.gb.knox.nudge.exception.EntityMissingException;
+import net.gb.knox.nudge.fixture.JwtFixture;
 import net.gb.knox.nudge.fixture.NudgeFixture;
 import net.gb.knox.nudge.model.Nudge;
 import net.gb.knox.nudge.model.Trigger;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
@@ -64,13 +66,13 @@ public class NudgeServiceUnitTests {
                 LocalDate.of(2025, 1, 1), List.of(createTrigger));
         when(repository.save(any(Nudge.class))).thenReturn(NudgeFixture.NUDGE);
 
-        service.createNudgeForUser(NudgeFixture.USER_ID, upsertNudge);
+        service.createNudgeForUser(JwtFixture.JWT, upsertNudge);
 
         verify(repository, times(1)).save(any(Nudge.class));
 
         // Simulate transaction commit
         TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
-        verify(triggerScheduler).scheduleTask(eq(upsertNudge.due()), any(Trigger.class));
+        verify(triggerScheduler).scheduleTask(any(Jwt.class), any(Nudge.class), any(Trigger.class));
     }
 
     @Test

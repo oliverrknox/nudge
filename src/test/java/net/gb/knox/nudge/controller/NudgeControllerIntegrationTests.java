@@ -1,18 +1,19 @@
 package net.gb.knox.nudge.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sendgrid.SendGrid;
 import net.gb.knox.nudge.domain.Communication;
 import net.gb.knox.nudge.domain.CreateTrigger;
 import net.gb.knox.nudge.domain.Period;
 import net.gb.knox.nudge.domain.UpsertNudge;
 import net.gb.knox.nudge.fixture.NudgeFixture;
+import net.gb.knox.nudge.fixture.annotation.WithMockJwt;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -37,9 +38,12 @@ public class NudgeControllerIntegrationTests {
     @MockBean
     private JwtDecoder jwtDecoder;
 
+    @MockBean
+    private SendGrid sendGrid;
+
     @Test
     @DirtiesContext
-    @WithMockUser(username = NudgeFixture.USER_ID)
+    @WithMockJwt(subject = NudgeFixture.USER_ID)
     public void testValidGetAllNudgesForUser() throws Exception {
         var getRequest = get("/nudges");
         api.perform(getRequest).andExpect(status().isOk())
@@ -53,7 +57,7 @@ public class NudgeControllerIntegrationTests {
 
     @Test
     @DirtiesContext
-    @WithMockUser(username = NudgeFixture.USER_ID)
+    @WithMockJwt(subject = NudgeFixture.USER_ID)
     public void testValidCreateNudgeForUser() throws Exception {
         var createNudge = new UpsertNudge("Title", "Description",
                 LocalDate.of(2025, 1, 1),
@@ -66,7 +70,7 @@ public class NudgeControllerIntegrationTests {
 
     @Test
     @DirtiesContext
-    @WithMockUser(username = NudgeFixture.USER_ID)
+    @WithMockJwt(subject = NudgeFixture.USER_ID)
     public void testValidUpdateNudgeForUser() throws Exception {
         var updateNudge = new UpsertNudge("NewTitle", "NewDescription",
                 LocalDate.of(2025, 1, 1),
@@ -79,7 +83,7 @@ public class NudgeControllerIntegrationTests {
 
     @Test
     @DirtiesContext
-    @WithMockUser(username = NudgeFixture.USER_ID)
+    @WithMockJwt(subject = NudgeFixture.USER_ID)
     public void testValidDeleteNudgeForUser() throws Exception {
         var deleteRequest = delete("/nudges/1").with(csrf());
         api.perform(deleteRequest).andExpect(status().isNoContent());

@@ -1,12 +1,17 @@
 package net.gb.knox.nudge.scheduler;
 
+import net.gb.knox.nudge.fixture.JwtFixture;
+import net.gb.knox.nudge.fixture.NudgeFixture;
 import net.gb.knox.nudge.fixture.TriggerFixture;
+import net.gb.knox.nudge.model.Nudge;
+import net.gb.knox.nudge.scheduler.task.SendEmailTask;
+import net.gb.knox.nudge.scheduler.task.TaskResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.scheduling.TaskScheduler;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Optional;
 import java.util.concurrent.ScheduledFuture;
@@ -18,23 +23,25 @@ import static org.mockito.Mockito.*;
 public class TriggerSchedulerUnitTests {
 
     private TaskScheduler taskScheduler;
+    private SendEmailTask sendEmailTask;
     private TriggerScheduler triggerScheduler;
 
     @BeforeEach
     public void setUp() {
         taskScheduler = mock(TaskScheduler.class);
-        triggerScheduler = new TriggerScheduler(taskScheduler);
+        sendEmailTask = mock(SendEmailTask.class);
+        triggerScheduler = new TriggerScheduler(taskScheduler, sendEmailTask);
     }
 
     @Test
     public void testScheduleTask() {
-        var due = LocalDate.now();
-        var expectedInstant = due.minusMonths(TriggerFixture.TRIGGER.getSpan()).atStartOfDay(ZoneId.systemDefault()).toInstant();
+        var expectedInstant = NudgeFixture.NUDGE.getDue().minusMonths(TriggerFixture.TRIGGER.getSpan()).atStartOfDay(ZoneId.systemDefault()).toInstant();
 
         ScheduledFuture<?> scheduledFuture = mock(ScheduledFuture.class);
-        doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(Instant.class));
+        doReturn(scheduledFuture).when(taskScheduler).schedule(any(), (Instant) any());
+        when(sendEmailTask.run(any(Jwt.class), any(Nudge.class), any(TaskResult.class))).thenReturn(() -> {});
 
-        triggerScheduler.scheduleTask(due, TriggerFixture.TRIGGER);
+        triggerScheduler.scheduleTask(JwtFixture.JWT, NudgeFixture.NUDGE, TriggerFixture.TRIGGER);
 
         verify(taskScheduler).schedule(any(Runnable.class), eq(expectedInstant));
 
@@ -44,11 +51,11 @@ public class TriggerSchedulerUnitTests {
 
     @Test
     public void testCancelTask() {
-        var due = LocalDate.now();
         ScheduledFuture<?> scheduledFuture = mock(ScheduledFuture.class);
         doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(Instant.class));
+        when(sendEmailTask.run(any(Jwt.class), any(Nudge.class), any(TaskResult.class))).thenReturn(() -> {});
 
-        triggerScheduler.scheduleTask(due, TriggerFixture.TRIGGER);
+        triggerScheduler.scheduleTask(JwtFixture.JWT, NudgeFixture.NUDGE, TriggerFixture.TRIGGER);
         triggerScheduler.cancelTask(TriggerFixture.TRIGGER.getId());
 
         var task = Optional.ofNullable(triggerScheduler.getTasks().get(TriggerFixture.TRIGGER.getId()));

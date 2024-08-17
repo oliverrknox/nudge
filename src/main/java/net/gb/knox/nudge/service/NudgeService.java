@@ -11,6 +11,7 @@ import net.gb.knox.nudge.repository.NudgeRepository;
 import net.gb.knox.nudge.scheduler.TriggerScheduler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -39,8 +40,8 @@ public class NudgeService {
     }
 
     @Transactional
-    public Long createNudgeForUser(String userId, UpsertNudge upsertNudge) {
-        var newNudge = new Nudge(userId, upsertNudge.title(), upsertNudge.description(), upsertNudge.due(),
+    public Long createNudgeForUser(Jwt principal, UpsertNudge upsertNudge) {
+        var newNudge = new Nudge(principal.getSubject(), upsertNudge.title(), upsertNudge.description(), upsertNudge.due(),
                 upsertNudge.triggers().stream().map(TriggerConverter::convert).toList());
 
         var savedNudge = nudgeRepository.save(newNudge);
@@ -48,7 +49,7 @@ public class NudgeService {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                Consumer<Trigger> scheduleTask = (Trigger trigger) -> triggerScheduler.scheduleTask(newNudge.getDue(), trigger);
+                Consumer<Trigger> scheduleTask = (Trigger trigger) -> triggerScheduler.scheduleTask(principal, savedNudge, trigger);
                 savedNudge.getTriggers().parallelStream().forEach(scheduleTask);
             }
         });
