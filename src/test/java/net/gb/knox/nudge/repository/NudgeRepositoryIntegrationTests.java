@@ -42,6 +42,12 @@ public class NudgeRepositoryIntegrationTests {
     }
 
     @Test
+    public void testFindByIdAndUserId() {
+        var foundNudge = nudgeRepository.findByIdAndUserId(NudgeFixture.NUDGE.getId(), NudgeFixture.NUDGE.getUserId());
+        assertThat(foundNudge).isPresent();
+    }
+
+    @Test
     public void testDeleteByIdAndUserId() {
         nudgeRepository.deleteByIdAndUserId(NudgeFixture.NUDGE.getId(), NudgeFixture.NUDGE.getUserId());
         var deletedNudge = nudgeRepository.findById(NudgeFixture.NUDGE.getId());
