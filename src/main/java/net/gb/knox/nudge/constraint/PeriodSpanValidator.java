@@ -10,6 +10,13 @@ public class PeriodSpanValidator implements ConstraintValidator<PeriodSpan, Trig
     @Override
     public boolean isValid(Trigger trigger, ConstraintValidatorContext context) {
         var span = trigger.getSpan();
+        var period = trigger.getPeriod();
+
+        // Null values are treated as valid because responsibility is delegated to @NotNull annotation
+        if (span == null || period == null) {
+            return true;
+        }
+
         var maxSpan = switch (trigger.getPeriod()) {
             case Period.DAY -> 7;
             case Period.WEEK -> 4;
