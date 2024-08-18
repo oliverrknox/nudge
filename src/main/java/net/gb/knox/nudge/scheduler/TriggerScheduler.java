@@ -38,7 +38,7 @@ public class TriggerScheduler {
             case MONTH -> nudge.getDue().minusMonths(trigger.getSpan());
         };
 
-        var task = sendEmailTask.run(principal, nudge, () -> tasks.remove(trigger.getId()));
+        var task = sendEmailTask.build(principal, nudge, () -> tasks.remove(trigger.getId()));
         var scheduledTask = taskScheduler.schedule(task, scheduledDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
 
         tasks.put(trigger.getId(), scheduledTask);

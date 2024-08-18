@@ -39,7 +39,7 @@ public class TriggerSchedulerUnitTests {
 
         ScheduledFuture<?> scheduledFuture = mock(ScheduledFuture.class);
         doReturn(scheduledFuture).when(taskScheduler).schedule(any(), (Instant) any());
-        when(sendEmailTask.run(any(Jwt.class), any(Nudge.class), any(TaskResult.class))).thenReturn(() -> {});
+        when(sendEmailTask.build(any(Jwt.class), any(Nudge.class), any(TaskResult.class))).thenReturn(() -> {});
 
         triggerScheduler.scheduleTask(JwtFixture.JWT, NudgeFixture.NUDGE, TriggerFixture.TRIGGER);
 
@@ -53,7 +53,7 @@ public class TriggerSchedulerUnitTests {
     public void testCancelTask() {
         ScheduledFuture<?> scheduledFuture = mock(ScheduledFuture.class);
         doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(Instant.class));
-        when(sendEmailTask.run(any(Jwt.class), any(Nudge.class), any(TaskResult.class))).thenReturn(() -> {});
+        when(sendEmailTask.build(any(Jwt.class), any(Nudge.class), any(TaskResult.class))).thenReturn(() -> {});
 
         triggerScheduler.scheduleTask(JwtFixture.JWT, NudgeFixture.NUDGE, TriggerFixture.TRIGGER);
         triggerScheduler.cancelTask(TriggerFixture.TRIGGER.getId());
