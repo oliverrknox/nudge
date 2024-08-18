@@ -4,6 +4,8 @@ import lombok.Getter;
 import net.gb.knox.nudge.model.Nudge;
 import net.gb.knox.nudge.model.Trigger;
 import net.gb.knox.nudge.scheduler.task.SendEmailTask;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -21,6 +23,8 @@ public class TriggerScheduler {
     private final TaskScheduler taskScheduler;
     private final SendEmailTask sendEmailTask;
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
     @Getter
     private final Map<Long, ScheduledFuture<?>> tasks; // TODO: Persist task IDs and reschedule tasks post construct
 
@@ -32,6 +36,8 @@ public class TriggerScheduler {
     }
 
     public void scheduleTask(Jwt principal, Nudge nudge, Trigger trigger) {
+        logger.info("scheduleTask(principal: {}, nudge: {}, trigger: {}): enter", principal.getSubject(), nudge, trigger);
+
         LocalDate scheduledDate = switch (trigger.getPeriod()) {
             case DAY -> nudge.getDue().minusDays(trigger.getSpan());
             case WEEK -> nudge.getDue().minusWeeks(trigger.getSpan());
@@ -42,12 +48,19 @@ public class TriggerScheduler {
         var scheduledTask = taskScheduler.schedule(task, scheduledDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
 
         tasks.put(trigger.getId(), scheduledTask);
+
+        logger.info("scheduleTask(): exit");
     }
 
     public void cancelTask(Long id) {
+        logger.info("cancelTask(id: {}): enter", id);
+
         if (tasks.containsKey(id)) {
             var task = tasks.remove(id);
             task.cancel(false);
+            logger.info("cancelTask(): remove and cancel");
         }
+
+        logger.info("cancelTask(): exit");
     }
 }

@@ -9,6 +9,8 @@ import net.gb.knox.nudge.model.Nudge;
 import net.gb.knox.nudge.model.Trigger;
 import net.gb.knox.nudge.repository.NudgeRepository;
 import net.gb.knox.nudge.scheduler.TriggerScheduler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -25,6 +27,8 @@ public class NudgeService {
     private final NudgeRepository nudgeRepository;
     private final TriggerScheduler triggerScheduler;
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
     @Autowired
     public NudgeService(NudgeRepository nudgeRepository, TriggerScheduler triggerScheduler) {
         this.nudgeRepository = nudgeRepository;
@@ -32,15 +36,22 @@ public class NudgeService {
     }
 
     public GetNudges getAllNudgesForUser(String userId) {
-        return new GetNudges(nudgeRepository.findAllByUserId(userId).stream().map(NudgeConverter::convert).toList());
+        logger.info("getAllNudgesForUser(userId: {}): enter", userId);
+        var getNudges = new GetNudges(nudgeRepository.findAllByUserId(userId).stream().map(NudgeConverter::convert).toList());
+        logger.info("getAllNudgesForUser(userId: {}): exit", userId);
+        return getNudges;
     }
 
     public GetNudges getAllNudgesForUser(String userId, Sort sort) {
-        return new GetNudges(nudgeRepository.findAllByUserId(userId, sort).stream().map(NudgeConverter::convert).toList());
+        logger.info("getAllNudgesForUser(userId: {}, sort: {}): enter", userId, sort);
+        var getNudges = new GetNudges(nudgeRepository.findAllByUserId(userId, sort).stream().map(NudgeConverter::convert).toList());
+        logger.info("getAllNudgesForUser(userId: {}, sort: {}): exit", userId, sort);
+        return getNudges;
     }
 
     @Transactional
     public Long createNudgeForUser(Jwt principal, UpsertNudge upsertNudge) {
+        logger.info("createNudgeForUser(principal: {}, upsertNudge: {}): enter", principal.getSubject(), upsertNudge);
         var newNudge = new Nudge(principal.getSubject(), upsertNudge.title(), upsertNudge.description(), upsertNudge.due(),
                 upsertNudge.triggers().stream().map(TriggerConverter::convert).toList());
 
@@ -54,11 +65,13 @@ public class NudgeService {
             }
         });
 
+        logger.info("createNudgeForUser(): exit");
         return savedNudge.getId();
     }
 
     @Transactional
     public void updateNudgeForUser(Long id, String userId, UpsertNudge upsertNudge) throws EntityMissingException {
+        logger.info("updateNudgeForUser(id: {}, userId: {}, upsertNudge: {}): enter", id, userId, upsertNudge);
         var triggerIds = nudgeRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new EntityMissingException(String.format("Nudge not found with id = %s and userId = %s", id, userId)))
                 .getTriggers().stream().map(Trigger::getId).toList();
@@ -74,10 +87,12 @@ public class NudgeService {
                 triggerIds.parallelStream().forEach(triggerScheduler::cancelTask);
             }
         });
+        logger.info("updateNudgeForUser(): exit");
     }
 
     @Transactional
     public void deleteNudgeForUser(Long id, String userId) throws EntityMissingException {
+        logger.info("deleteNudgeForUser(id: {}, userId: {}): enter", id, userId);
         if (!nudgeRepository.existsByIdAndUserId(id, userId)) {
             throw new EntityMissingException(String.format("Nudge not found with id = %s and userId = %s", id, userId));
         }
@@ -89,5 +104,6 @@ public class NudgeService {
                 triggerScheduler.cancelTask(id);
             }
         });
+        logger.info("deleteNudgeForUser(): exit");
     }
 }
