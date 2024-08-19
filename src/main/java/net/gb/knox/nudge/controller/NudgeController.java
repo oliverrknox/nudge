@@ -1,5 +1,10 @@
 package net.gb.knox.nudge.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import net.gb.knox.nudge.domain.GetNudges;
 import net.gb.knox.nudge.domain.UpsertNudge;
 import net.gb.knox.nudge.exception.EntityMissingException;
@@ -19,6 +24,8 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/nudges")
+@ApiResponses({@ApiResponse(responseCode = "400", ref = "badRequest"), @ApiResponse(responseCode = "401", ref = "unauthenticated"),
+        @ApiResponse(responseCode = "403", ref = "forbidden"), @ApiResponse(responseCode = "404", ref = "notFound")})
 public class NudgeController {
 
     private final NudgeService nudgeService;
@@ -31,6 +38,8 @@ public class NudgeController {
     }
 
     @GetMapping
+    @Operation(summary = "Get all nudges for user", description = "Gets all nudges for the currently authenticated user.")
+    @ApiResponse(responseCode = "200", description = "Got all nudges for user", content = @Content(schema = @Schema(implementation = GetNudges.class)))
     public ResponseEntity<GetNudges> getAllNudgesForUser(@AuthenticationPrincipal Jwt principal,
                                                         @RequestParam Optional<String> field,
                                                         @RequestParam Optional<Sort.Direction> direction) {
@@ -47,6 +56,9 @@ public class NudgeController {
     }
 
     @PostMapping
+    @Operation(summary = "Create nudge for user", description = "Creates a new nudge and registers background tasks " +
+            "for the currently authenticated user.")
+    @ApiResponse(responseCode = "201", description = "Created nudge")
     public ResponseEntity<Void> createNudgeForUser(@AuthenticationPrincipal Jwt principal,
                                                    @RequestBody UpsertNudge createNudge) throws URISyntaxException {
         logger.info("createNudgeForUser(principal: {}, createNudge: {}): enter", principal.getSubject(), createNudge);
@@ -58,6 +70,9 @@ public class NudgeController {
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Update nudge for user", description = "Updates an existing nudge and re-registers any " +
+            "background tasks for the currently authenticated user.")
+    @ApiResponse(responseCode = "200", description = "Updated nudge")
     public ResponseEntity<Void> updateNudgeForUser(@AuthenticationPrincipal Jwt principal, @PathVariable Long id,
                                                    @RequestBody UpsertNudge updateNudge) throws EntityMissingException {
         logger.info("updateNudgeForUser(principal: {}, id: {}, updateNudge: {}): enter", principal.getSubject(), id, updateNudge);
@@ -68,6 +83,9 @@ public class NudgeController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Delete nudge for user", description = "Deletes a nudge for the currently authenticated user " +
+            "and cleans up any background tasks.")
+    @ApiResponse(responseCode = "204", description = "Deleted nudge.")
     public ResponseEntity<Void> deleteNudgeForUser(@AuthenticationPrincipal Jwt principal,
                                                     @PathVariable Long id) throws EntityMissingException {
         logger.info("deleteNudgeForUser(principal: {}, id: {}): enter", principal.getSubject(), id);
