@@ -20,4 +20,4 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: "http://localhost:9025/realms/api.knox.gb.net/protocol/openid-connect/certs"
+          jwk-set-uri: ${JWK_SET_URI}
