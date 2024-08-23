@@ -2,6 +2,8 @@ nudge:
   sendgrid:
     api-key:
 
+  servers:
+
 spring:
   datasource:
     url: jdbc:h2:mem:nudge

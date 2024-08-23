@@ -11,9 +11,13 @@ import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import net.gb.knox.nudge.domain.Error;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 
@@ -21,6 +25,9 @@ import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 public class OpenApiConfig {
 
     private final Schema<?> errorSchema = ModelConverters.getInstance().resolveAsResolvedSchema(new AnnotatedType(Error.class)).schema;
+
+    @Value("${nudge.servers}")
+    private List<String> origins;
 
     private ApiResponse baseErrorResponse() {
         var errorContent = new Content().addMediaType(APPLICATION_JSON_VALUE, new MediaType().schema(errorSchema));
@@ -30,6 +37,9 @@ public class OpenApiConfig {
     @Bean
     OpenAPI openApi() {
         var info = new Info().title("Nudge API").version("0.0.1-SNAPSHOT");
+
+        var servers = origins.stream().map(origin -> new Server().url(origin)).toList();
+
         var securityRequirements = new SecurityRequirement().addList("bearerAuth");
         var securityScheme = new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT");
 
@@ -44,6 +54,6 @@ public class OpenApiConfig {
                 .addResponses("forbidden", forbiddenResponse)
                 .addResponses("notFound", notFoundResponse);
 
-        return new OpenAPI().info(info).addSecurityItem(securityRequirements).components(components);
+        return new OpenAPI().info(info).addSecurityItem(securityRequirements).components(components).servers(servers);
     }
 }
