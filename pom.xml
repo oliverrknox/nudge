@@ -10,7 +10,7 @@
     </parent>
     <groupId>net.gb.knox</groupId>
     <artifactId>nudge</artifactId>
-    <version>0.1.1</version>
+    <version>0.1.2</version>
     <name>Nudge</name>
     <description>A REST API for reminders.</description>
     <url>https://github.com/ecliptera/nudge</url>
