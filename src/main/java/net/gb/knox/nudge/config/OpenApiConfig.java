@@ -13,11 +13,10 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import net.gb.knox.nudge.domain.Error;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.List;
+import java.util.Arrays;
 
 import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 
@@ -25,9 +24,6 @@ import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 public class OpenApiConfig {
 
     private final Schema<?> errorSchema = ModelConverters.getInstance().resolveAsResolvedSchema(new AnnotatedType(Error.class)).schema;
-
-    @Value("${nudge.servers}")
-    private List<String> origins;
 
     private ApiResponse baseErrorResponse() {
         var errorContent = new Content().addMediaType(APPLICATION_JSON_VALUE, new MediaType().schema(errorSchema));
@@ -38,7 +34,9 @@ public class OpenApiConfig {
     OpenAPI openApi() {
         var info = new Info().title("Nudge API").version("0.0.1-SNAPSHOT");
 
-        var servers = origins.stream().map(origin -> new Server().url(origin)).toList();
+        var productionServer = new Server().url("https://api.knox.gb.net/nudge-gateway").description("Live server");
+        var localServer = new Server().url("http://localhost:8080").description("Local development server");
+        var servers = Arrays.asList(productionServer, localServer);
 
         var securityRequirements = new SecurityRequirement().addList("bearerAuth");
         var securityScheme = new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT");
