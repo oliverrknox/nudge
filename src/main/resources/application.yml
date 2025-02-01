@@ -2,7 +2,7 @@ nudge:
   sendgrid:
     api-key: ${SENDGRID_API_KEY}
 
-  servers: https://api.knox.gb.net, http://localhost:8080
+  servers: https://api.oliverknox.io, http://localhost:8080
 
 spring:
   application:

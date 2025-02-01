@@ -80,4 +80,4 @@ To run the application
 
 This application is documented using Open API. 
 
-Visit the [Swagger UI](https://api.knox.gb.net/nudge-gateway/swagger-ui/index.html).
+Visit the [Swagger UI](https://api.oliverknox.io/nudge-gateway/swagger-ui/index.html).
